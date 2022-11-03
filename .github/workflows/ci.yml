@@ -1,0 +1,43 @@
+name: Build and Deploy SPA to Amazon S3
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - 'features/**'
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  AWS_REGION: ap-northeast-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-${{ github.run_id }}-${{ github.run_number }}
+          mask-aws-account-id: no
+
+      - name: Deploy
+        run: |
+          aws s3 sync build s3://${{ secrets.AWS_S3_BUCKET }} --follow-symlinks --delete
+
