@@ -23,7 +23,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
-      - name: Install Dependencies
+      - name: Setup node.js and Install Dependencies
+        uses: actions/setup-node@v3
+        id: setup_node_id
+        with:
+          node-version: 16.18.0
+          cache: npm
+      - run: echo '${{ toJSON(steps.setup_node_id.outputs) }}'
+      - if: ${{ steps.setup_node_id.outputs.cache-hit != 'true' }}
         run: npm install
 
       - name: Build React app
